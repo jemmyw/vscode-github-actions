@@ -4,12 +4,14 @@ import {RepositoryPermission, hasWritePermission} from "../git/repository-permis
 import {log, logDebug} from "../log";
 import * as model from "../model";
 import {WorkflowJob} from "./WorkflowJob";
+import {WorkflowJobGroup} from "./WorkflowJobGroup";
 
 abstract class WorkflowRunBase {
   protected _gitHubRepoContext: GitHubRepoContext;
   protected _run: model.WorkflowRun;
 
   private _jobs: Promise<WorkflowJob[]> | undefined;
+  private _groups: Promise<WorkflowJobGroup[]> | undefined;
 
   constructor(gitHubRepoContext: GitHubRepoContext, run: model.WorkflowRun) {
     this._gitHubRepoContext = gitHubRepoContext;
@@ -50,6 +52,30 @@ abstract class WorkflowRunBase {
     }
 
     return this._jobs;
+  }
+
+  groups(): Promise<WorkflowJobGroup[]> {
+    if (!this._groups) {
+      this._groups = this.jobs().then(jobs => {
+        const groupedJobs = jobs.reduce((acc, job) => {
+          let groupName = job.job.name;
+          // If the job name ends with a number in brackets then remove it
+          const match = groupName.match(/(.*) \(\d+\)$/);
+          if (match) {
+            groupName = match[1];
+          }
+          if (!acc.has(groupName)) {
+            acc.set(groupName, []);
+          }
+          acc.get(groupName)?.push(job.job);
+          return acc;
+        }, new Map<string, model.WorkflowJob[]>());
+
+        return Array.from(groupedJobs).map(([name, jobs]) => new WorkflowJobGroup(this._gitHubRepoContext, name, jobs));
+      });
+    }
+
+    return this._groups;
   }
 
   contextValue(permission: RepositoryPermission): string {

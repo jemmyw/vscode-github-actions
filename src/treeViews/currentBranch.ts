@@ -15,6 +15,8 @@ import {WorkflowJobNode} from "./shared/workflowJobNode";
 import {WorkflowRunNode} from "./shared/workflowRunNode";
 import {WorkflowRunTreeDataProvider} from "./workflowRunTreeDataProvider";
 import {WorkflowStepNode} from "./workflows/workflowStepNode";
+import {WorkflowJobGroup} from "../store/WorkflowJobGroup";
+import {WorkflowJobGroupNode} from "./shared/workflowJobGroupNode";
 
 type CurrentBranchTreeNode =
   | CurrentBranchRepoNode
@@ -89,6 +91,8 @@ export class CurrentBranchTreeProvider
     } else if (element instanceof CurrentBranchRepoNode) {
       return this.getRuns(element.gitHubRepoContext, element.currentBranchName);
     } else if (element instanceof WorkflowRunNode) {
+      return element.getGroups();
+    } else if (element instanceof WorkflowJobGroupNode) {
       return element.getJobs();
     } else if (element instanceof PreviousAttemptsNode) {
       return element.getAttempts();

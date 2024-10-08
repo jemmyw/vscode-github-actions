@@ -17,6 +17,7 @@ import {WorkflowRunTreeDataProvider} from "./workflowRunTreeDataProvider";
 import {WorkflowNode} from "./workflows/workflowNode";
 import {getWorkflowNodes, WorkflowsRepoNode} from "./workflows/workflowsRepoNode";
 import {WorkflowStepNode} from "./workflows/workflowStepNode";
+import {WorkflowJobGroupNode} from "./shared/workflowJobGroupNode";
 
 type WorkflowsTreeNode =
   | AuthenticationNode
@@ -96,10 +97,15 @@ export class WorkflowsTreeProvider
     } else if (element instanceof WorkflowNode) {
       return this.getRuns(element);
     } else if (element instanceof WorkflowRunNode) {
+      // return element.getJobs();
+      logDebug("Getting groups for run");
+      return element.getGroups();
+    } else if (element instanceof WorkflowJobGroupNode) {
       return element.getJobs();
     } else if (element instanceof PreviousAttemptsNode) {
       return element.getAttempts();
     } else if (element instanceof AttemptNode) {
+      logDebug("Getting jobs for attempt");
       return element.getJobs();
     } else if (element instanceof WorkflowJobNode) {
       return element.getSteps();

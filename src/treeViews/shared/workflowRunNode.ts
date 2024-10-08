@@ -8,6 +8,7 @@ import {getEventString, getStatusString} from "./runTooltipHelper";
 import {NoWorkflowJobsNode} from "./noWorkflowJobsNode";
 import {PreviousAttemptsNode} from "./previousAttemptsNode";
 import {WorkflowJobNode} from "./workflowJobNode";
+import {WorkflowJobGroupNode} from "./workflowJobGroupNode";
 
 export type WorkflowRunCommandArgs = Pick<WorkflowRunNode, "gitHubRepoContext" | "run" | "store">;
 
@@ -38,6 +39,20 @@ export class WorkflowRunNode extends vscode.TreeItem {
 
     const children: (WorkflowJobNode | NoWorkflowJobsNode | PreviousAttemptsNode)[] = jobs.map(
       job => new WorkflowJobNode(this.gitHubRepoContext, job)
+    );
+
+    if (this.run.hasPreviousAttempts) {
+      children.push(new PreviousAttemptsNode(this.gitHubRepoContext, this.run));
+    }
+
+    return children;
+  }
+
+  async getGroups(): Promise<(WorkflowJobGroupNode | NoWorkflowJobsNode | PreviousAttemptsNode)[]> {
+    const groups = await this.run.groups();
+
+    const children: (WorkflowJobGroupNode | NoWorkflowJobsNode | PreviousAttemptsNode)[] = groups.map(
+      group => new WorkflowJobGroupNode(this.gitHubRepoContext, group)
     );
 
     if (this.run.hasPreviousAttempts) {
